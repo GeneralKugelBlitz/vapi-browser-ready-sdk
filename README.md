@@ -1,174 +1,100 @@
-# Vapi Client Integration
+# Vapi Browser-Ready SDK
+
+A minimal browser-ready wrapper for the Vapi Web SDK that exposes the core functionality without any UI components.
 
 ## Overview
 
-This project integrates the Vapi client into any website, providing a voice assistant for support purposes. The Vapi client is powered by an easy-to-install JavaScript SDK, which is included in the website via a simple code snippet.
+This package provides a barebone browser-ready version of the [Vapi Web SDK](https://github.com/VapiAI/web) that can be loaded directly via a script tag. Unlike the official HTML script tag implementation, this version:
 
-## Features
-
-- **Voice Assistant**: Enhance user experience with our voice assistant instantly.
-- **Customization**: Configure the assistant's settings to match your website's needs.
-- **UI Flexibility**: If needed, use the exposed CSS classes to further customize the appearance and behavior of the assistant on your webpage.
+- Contains **no UI components** or floating buttons
+- Exposes the **full SDK functionality** with all methods and event handlers
+- Gives you **complete control** over your implementation
 
 ## Installation
 
-To add Vapi to your website, include the following javascript snippet in your HTML file inside a script tag:
+### CDN
 
-```js
+Include the SDK directly in your HTML:
+
+```html
+<script src="https://cdn.jsdelivr.net/gh/GeneralKugelBlitz/vapi-browser-ready-sdk@latest/dist/vapi-browser-ready.js"></script>
+```
+
+### Local Build
+
+1. Clone this repository
+2. Run `npm install`
+3. Run `npm run build`
+4. Use the built file from the `dist` directory
+
+## Basic Usage
+
+After including the script, the SDK is available as a global `Vapi` constructor:
+
+```html
 <script>
-  (function (d, t) {
-    var g = document.createElement(t),
-      s = d.getElementsByTagName(t)[0];
-    g.src =
-      "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
-    g.defer = true;
-    g.async = true;
-    s.parentNode.insertBefore(g, s);
-
-    g.onload = function () {
-      const vapi = window.vapiSDK.run({
-        apiKey: "", // required Use your Public Key
-        assistant: assistant, // required
-        assistantOverrides: {}, // optional (This lets you override the assistant configuration and can be used alongside assistantId.)
-        config: buttonConfig // optional
-      });
-
-      if(vapi) {
-        // Extend more using vapi
-
-      }
-    };
-  })(document, "script");
+  // Initialize the SDK with your API key
+  const vapi = new Vapi('YOUR_API_KEY');
+  
+  // Set up event listeners
+  vapi.on('call-start', () => console.log('Call started'));
+  vapi.on('call-end', () => console.log('Call ended'));
+  vapi.on('speech-start', () => console.log('Assistant is speaking'));
+  vapi.on('speech-end', () => console.log('Assistant stopped speaking'));
+  vapi.on('message', (message) => console.log('Message:', message));
+  vapi.on('error', (error) => console.error('Error:', error));
+  
+  // Start a call with an assistant
+  async function startCall() {
+    await vapi.start('YOUR_ASSISTANT_ID');
+    console.log('Call started!');
+  }
+  
+  // Stop a call
+  function stopCall() {
+    vapi.stop();
+    console.log('Call stopped!');
+  }
+  
+  // Toggle mute
+  function toggleMute() {
+    const isMuted = vapi.isMuted();
+    vapi.setMuted(!isMuted);
+    console.log(`Microphone ${!isMuted ? 'muted' : 'unmuted'}`);
+  }
 </script>
 ```
 
-Where value of assistant can be your assistant ID (Dashboard > Assistants > Select your assistant > Copy the id) or assistant config like below example.
+## Examples
 
-```js
-const assistant = {
-  model: {
-    provider: "openai",
-    model: "gpt-3.5-turbo",
-    systemPrompt:
-      "You're a versatile AI assistant named Vapi who is fun to talk with.",
-  },
-  voice: {
-    provider: "11labs",
-    voiceId: "paula",
-  },
-  firstMessage: "Hi, I am Vapi how can I assist you today?",
-};
-```
+Check out the examples directory for complete implementation examples:
 
-You can also create squad using the assistant to handle complex workflows and tasks. For example. 
+- `example/minimal-example.html` - Basic implementation showing all core functions
 
-```js
+## Available Methods
 
-const squad = {
-  "squad": {
-    "members": [
-      {
-        "assistantId": "information-gathering-assistant-id",
-        "assistantDestinations": [{
-          "type": "assistant",
-          "assistantName": "Appointment Booking",
-          "message": "Please hold on while I transfer you to our appointment booking assistant.",
-          "description": "Transfer the user to the appointment booking assistant after they say their name."
-        }],
-      },
-      {
-        "assistant": {
-          "name": "Appointment Booking",
-        },
-      }
-    ]
-  }
-}
+The SDK exposes all methods from the core Vapi SDK:
 
-(function (d, t) {
-    var g = document.createElement(t),
-      s = d.getElementsByTagName(t)[0];
-    g.src =
-      "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
-    g.defer = true;
-    g.async = true;
-    s.parentNode.insertBefore(g, s);
+- `vapi.start(assistant)` - Start a call with an assistant or squad
+- `vapi.stop()` - Stop an active call
+- `vapi.send(message)` - Send a message during a call
+- `vapi.setMuted(boolean)` - Mute or unmute the microphone
+- `vapi.isMuted()` - Check if the microphone is muted
+- `vapi.say(message, endCallAfterSpoken)` - Make the assistant speak
+- And more...
 
-    g.onload = function () {
-      const vapi = window.vapiSDK.run({
-        apiKey: "", // required Use your Public Key
-        squad: squad, // You can pass in squad as an option to create squad.
-        config: buttonConfig // optional
-      });
+## Event Handling
 
-      if(vapi) {
-        // Extend more using vapi
+The SDK provides these events:
 
-      }
-    };
-  })(document, "script");
+- `call-start` - Fired when a call starts
+- `call-end` - Fired when a call ends
+- `speech-start` - Fired when the assistant starts speaking
+- `speech-end` - Fired when the assistant stops speaking
+- `volume-level` - Fired with audio volume updates
+- `message` - Fired when a message is received
+- `error` - Fired when an error occurs
 
+## License
 
-
-```
-
-
-You can also customise the look and feel of your Vapi Support Button using the following configurations.
-The button will have 3 states, `idle`, `loading` and `active`.
-
-```js
-const buttonConfig = {
-  position: "bottom-right", // "bottom" | "top" | "left" | "right" | "top-right" | "top-left" | "bottom-left" | "bottom-right"
-  offset: "40px", // decide how far the button should be from the edge
-  width: "50px", // min-width of the button
-  height: "50px", // height of the button
-  idle: {
-    // button state when the call is not active.
-    color: `rgb(93, 254, 202)`,
-    type: "pill", // or "round"
-    title: "Have a quick question?", // only required in case of Pill
-    subtitle: "Talk with our AI assistant", // only required in case of pill
-    icon: `https://unpkg.com/lucide-static@0.321.0/icons/phone.svg`,
-  },
-  loading: {
-    // button state when the call is connecting
-    color: `rgb(93, 124, 202)`,
-    type: "pill", // or "round"
-    title: "Connecting...", // only required in case of Pill
-    subtitle: "Please wait", // only required in case of pill
-    icon: `https://unpkg.com/lucide-static@0.321.0/icons/loader-2.svg`,
-  },
-  active: {
-    // button state when the call is in progress or active.
-    color: `rgb(255, 0, 0)`,
-    type: "pill", // or "round"
-    title: "Call is in progress...", // only required in case of Pill
-    subtitle: "End the call.", // only required in case of pill
-    icon: `https://unpkg.com/lucide-static@0.321.0/icons/phone-off.svg`,
-  },
-};
-```
-
-## Configuration
-
-You can customize the assistant by modifying the `assistant` object. The `apiKey` should be replaced with your unique key provided by Vapi.
-
-## UI Customization
-
-The SDK exposes several CSS classes that can be targeted for custom styling. Here is a list of the classes you can customize:
-
-- `.vapi-btn`: The main class for the Vapi button.
-- `.vapi-btn-is-idle`: The class for the Vapi button when the call is disconnected.
-- `.vapi-btn-is-active`: The class for the Vapi button when the call is active.
-- `.vapi-btn-is-loading`: The class for the Vapi button when the call is connecting.
-- `.vapi-btn-is-speaking`: The class for the Vapi button when the bot is speaking.
-- `.vapi-btn-pill`: The class for Vapi button to set pill variant.
-- `.vapi-btn-round`: The class for Vapi button to set round variant.
-
-You can add custom styles to these classes to match the look and feel of your website. These are exposed in case u need some more customisations besides the `position`, `color` and `offset` config available currently.
-
-## Support
-
-For any issues or further customization needs, please refer to the [VapiAI Docs](https://docs.vapi.ai) or contact our support team directly.
-
-Enjoy enhancing your website with Vapi, your friendly voice assistant!
+Same as the core Vapi SDK

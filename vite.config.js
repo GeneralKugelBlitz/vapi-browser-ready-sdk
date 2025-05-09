@@ -4,9 +4,9 @@ export default defineConfig({
   build: {
     lib: {
       entry: "src/index.js",
-      name: "index",
+      name: "vapi-browser-ready",
       fileName: (format) =>
-        format === "umd" ? `assets/index.js` : `assets/index.${format}.js`,
+        format === "umd" ? `vapi-browser-ready.js` : `vapi-browser-ready.${format}.js`,
     },
   },
 });

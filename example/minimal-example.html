@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vapi Minimal SDK Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .controls {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f5f5f5;
+        }
+        .log {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f8f8f8;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Vapi Minimal SDK Example</h1>
+    <p>This example demonstrates how to use the barebone Vapi SDK without any UI components.</p>
+    
+    <div class="controls">
+        <h2>Controls</h2>
+        <button id="startButton">Start Call</button>
+        <button id="stopButton">Stop Call</button>
+        <button id="muteButton">Mute/Unmute</button>
+    </div>
+    
+    <div class="log" id="eventLog">
+        <div>Event log will appear here...</div>
+    </div>
+    
+    <!-- Load the barebone Vapi SDK -->
+    <script src="../dist/vapi-browser-ready.js"></script>
+    
+    <script>
+        // Configuration
+        const API_KEY = "YOUR_API_KEY"; // Replace with your API key
+        const ASSISTANT_ID = "YOUR_ASSISTANT_ID"; // Replace with your assistant ID
+        
+        // Initialize SDK
+        let vapi = null;
+        let isMuted = false;
+        
+        // DOM Elements
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const muteButton = document.getElementById('muteButton');
+        const eventLog = document.getElementById('eventLog');
+        
+        // Log helper
+        function log(message) {
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            eventLog.appendChild(logEntry);
+            eventLog.scrollTop = eventLog.scrollHeight;
+            console.log(message);
+        }
+        
+        // Initialize when the page loads
+        window.addEventListener('load', () => {
+            try {
+                // Create Vapi instance
+                log("Initializing Vapi SDK...");
+                vapi = new Vapi(API_KEY);
+                log("Vapi SDK initialized successfully");
+                
+                // Set up event listeners
+                setupEventListeners();
+            } catch (error) {
+                log(`Error initializing Vapi: ${error.message}`);
+                console.error(error);
+            }
+        });
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Button click handlers
+            startButton.addEventListener('click', startCall);
+            stopButton.addEventListener('click', stopCall);
+            muteButton.addEventListener('click', toggleMute);
+            
+            // Vapi event listeners
+            vapi.on("call-start", () => {
+                log("Event: call-start - Call has started");
+            });
+            
+            vapi.on("call-end", () => {
+                log("Event: call-end - Call has ended");
+            });
+            
+            vapi.on("speech-start", () => {
+                log("Event: speech-start - Assistant is speaking");
+            });
+            
+            vapi.on("speech-end", () => {
+                log("Event: speech-end - Assistant finished speaking");
+            });
+            
+            vapi.on("volume-level", (volume) => {
+                // We'll log this less frequently to avoid flooding the log
+                if (Math.random() < 0.05) {
+                    log(`Event: volume-level - ${volume.toFixed(2)}`);
+                }
+            });
+            
+            vapi.on("message", (message) => {
+                log(`Event: message - ${JSON.stringify(message)}`);
+            });
+            
+            vapi.on("error", (error) => {
+                log(`Event: error - ${error.message || "Unknown error"}`);
+            });
+            
+            log("Event listeners configured");
+        }
+        
+        // Start a call
+        async function startCall() {
+            try {
+                log("Starting call with assistant...");
+                await vapi.start(ASSISTANT_ID);
+                log("Call started");
+            } catch (error) {
+                log(`Error starting call: ${error.message}`);
+                console.error(error);
+            }
+        }
+        
+        // Stop a call
+        function stopCall() {
+            try {
+                log("Stopping call...");
+                vapi.stop();
+                log("Call stopped");
+            } catch (error) {
+                log(`Error stopping call: ${error.message}`);
+                console.error(error);
+            }
+        }
+        
+        // Toggle mute
+        function toggleMute() {
+            try {
+                isMuted = !isMuted;
+                vapi.setMuted(isMuted);
+                log(`Microphone ${isMuted ? "muted" : "unmuted"}`);
+            } catch (error) {
+                log(`Error toggling mute: ${error.message}`);
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
